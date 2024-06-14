@@ -22,7 +22,7 @@
 	w_class = W_CLASS_BULKY
 
 	/// Please override this in child types to specify what can actually fit in.
-	var/allowed_mob_types = list(/mob/living/critter/small_animal, /mob/living/critter/wraith/plaguerat)
+	var/allowed_mob_types = list(/mob/living/critter/small_animal, /mob/living/critter/wraith/plaguerat), obj/item/rocko
 	/// Time it takes for each action (eg. grabbing, releasing).
 	var/actionbar_duration = 2 SECONDS
 	/// If FALSE, an occupant cannot escape the carrier on their own.
@@ -62,15 +62,15 @@
 
 	/// Carrier-related (grate_proxy, vis_contents_proxy) vis_flags.
 	var/const/carrier_vis_flags = VIS_INHERIT_ID | VIS_INHERIT_LAYER | VIS_INHERIT_PLANE
-	/// Mob-specific vis_flags.
-	var/const/mob_vis_flags = VIS_INHERIT_LAYER | VIS_INHERIT_PLANE
+	/// Occupant-specific vis_flags.
+	var/const/occupant_vis_flags = VIS_INHERIT_LAYER | VIS_INHERIT_PLANE
 
 	/// Grate object to be held in src.vis_contents
 	var/obj/dummy/grate_proxy
 	/// Proxy object for storing the vis_contents of each occupant, which itself is contained in the vis_contents of the parent carrier.
 	var/obj/dummy/vis_contents_proxy
 	/// A list of the current occupants inside the carrier.
-	var/list/mob/carrier_occupants = list()
+	var/list/atom/movable/carrier_occupants = list()
 
 	New()
 		..()
@@ -102,7 +102,7 @@
 				src.add_mob(spawned_mob)
 
 	disposing()
-		for (var/mob/occupant in src.carrier_occupants)
+		for (var/atom/movable/occupant in src.carrier_occupants)
 			src.eject_mob(occupant)
 		for (var/obj/item/stuff in src.contents)
 			MOVE_OUT_TO_TURF_SAFE(stuff, src)
@@ -212,28 +212,28 @@
 
 	proc/attempt_removal(mob/user)
 		if (length(src.carrier_occupants))
-			var/mob/mob_to_remove = src.carrier_occupants[1]
-			actions.start(new /datum/action/bar/icon/pet_carrier(mob_to_remove, src, src.icon, src.release_mob_icon_state, RELEASE_MOB, src.actionbar_duration), user)
+			var/atom/movable/occupant_to_remove = src.carrier_occupants[1]
+            actions.start(new /datum/action/bar/icon/pet_carrier(occupant_to_remove, src, src.icon, src.release_mob_icon_state, RELEASE_MOB, src.actionbar_duration), user)
 		else
 			boutput(user, SPAN_ALERT("[src] is without any friends! Aww!"))
 
 	/// Directly adds a target mob to the carrier.
-	proc/add_mob(mob/mob_to_add)
+	proc/add_mob(atom/movable/mob_to_add)
 		if (!mob_to_add)
 			return
 		mob_to_add.remove_pulling()
 		mob_to_add.set_loc(src)
-		mob_to_add.vis_flags |= src.mob_vis_flags
+		mob_to_add.vis_flags |= src.occupant_vis_flags
 		src.carrier_occupants.Add(mob_to_add)
 		src.vis_contents_proxy.vis_contents.Add(mob_to_add)
 		src.UpdateIcon()
 
 	/// Directly ejects a target mob from the carrier.
-	proc/eject_mob(mob/mob_to_eject)
+	proc/eject_mob(atom/movable/mob_to_eject)
 		if (!mob_to_eject)
 			return
 		MOVE_OUT_TO_TURF_SAFE(mob_to_eject, src)
-		mob_to_eject.vis_flags &= ~src.mob_vis_flags
+		mob_to_eject.vis_flags &= ~src.occupant_vis_flags
 		src.carrier_occupants.Remove(mob_to_eject)
 		src.vis_contents_proxy.vis_contents.Remove(mob_to_eject)
 
@@ -247,7 +247,7 @@
 	proc/take_door_damage(damage)
 		src.door_health -= damage
 		if (src.door_health <= 0)
-			for (var/mob/occupant in src.carrier_occupants)
+			for (var/atom/movable/occupant in src.carrier_occupants)
 				src.eject_mob(occupant)
 			src.visible_message(SPAN_ALERT("The door on [src] busts wide open, releasing its occupants!"))
 			src.door_health = src.door_health_max
