@@ -1,7 +1,7 @@
 #define SUPPLY_OPEN_TIME (1 SECOND) //Time it takes to open supply door in seconds.
 #define SUPPLY_CLOSE_TIME (15 SECONDS) //Time it takes to close supply door in seconds.
 /// The full explosion-power-to-credits conversion formula. Also used in smallprogs.dm
-#define PRESSURE_CRYSTAL_VALUATION(power) power ** 1.1 * 100
+#define PRESSURE_CRYSTAL_VALUATION(power) power ** 1.1 * 34
 /// The number of peak points on the pressure crystal graph offering bonus credits
 #define PRESSURE_CRYSTAL_PEAK_COUNT 3
 
@@ -521,12 +521,9 @@
 		//for each previously sold pressure crystal
 		for (var/sale in src.pressure_crystal_sales)
 			var/sale_value = text2num(sale)
-			//calculate a modifier based on the proximity of our current pressure to the previous one
-			//scales by a simple x^2 curve, stretched by the magnitude of the sale pressure (ie bigger bombs affect larger ranges)
-			//obligatory desmos: https://www.desmos.com/calculator/mumuykqlju
-			var/modifier = 1/(sale_value * 3) * ((pc.pressure - sale_value) ** 2)
-			if (modifier < 1) //a range cutoff to ensure we never add credit value
-				value *= modifier
+			var/minus = abs(pc.pressure - sale_value)
+			if(minus > 0 && minus < 10)
+				value = 0
 		for (var/peak in src.pressure_crystal_peaks)
 			var/peak_value = text2num(peak) //I hate byond lists
 			//very similar to above except inverted and bounded by the multiplier of the peak
