@@ -1,9 +1,7 @@
 #define SUPPLY_OPEN_TIME (1 SECOND) //Time it takes to open supply door in seconds.
 #define SUPPLY_CLOSE_TIME (15 SECONDS) //Time it takes to close supply door in seconds.
 /// The full explosion-power-to-credits conversion formula. Also used in smallprogs.dm
-#define PRESSURE_CRYSTAL_VALUATION(power)
-	if power = <310 (power ** 1.1 * 100)
-	else (power ** 1.1 * 34)
+#define PRESSURE_CRYSTAL_VALUATION(power) (power >= 310 ? (power ** 1.1 * 100) : (power ** 1.1 * 34))
 /// The number of peak points on the pressure crystal graph offering bonus credits
 #define PRESSURE_CRYSTAL_PEAK_COUNT 3
 
@@ -106,7 +104,7 @@
 		//set up pressure crystal market peaks
 		for (var/i in 1 to PRESSURE_CRYSTAL_PEAK_COUNT)
 			var/value = rand(50, 300)
-			///////i need roxys heolp
+			src.pressure_crystal_peaks.Add(value)
 
 	proc/add_commodity(var/datum/commodity/new_c)
 		src.commodities["[new_c.comtype]"] = new_c
@@ -527,14 +525,14 @@
 			if(minus < 10)
 				value = 0
 		for (var/peak in src.pressure_crystal_peaks)
-			var/peak_value = text2num(peak)
-			var/plus = abs(pc.pressure - peak_value)
-			if (minus < 1)
-				value = * 5
-			else if (minus > 1 && minus < 5)
-				value = * 3
-			else if (minus > 5 && minus < 10)
-				value = * 2
+			var/plus = abs(pc.pressure - peak)
+			switch(plus)
+				if(0 to 1)
+					value *= 5
+				if(1 to 5)
+					value *= 3
+				if(5 to 10)
+					value *= 2
 		value = round(value)
 		if (sell && value > 0)
 			src.pressure_crystal_sales["[pc.pressure]"] = value
