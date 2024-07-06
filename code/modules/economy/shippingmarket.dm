@@ -104,7 +104,7 @@
 		//set up pressure crystal market peaks
 		for (var/i in 1 to PRESSURE_CRYSTAL_PEAK_COUNT)
 			var/value = rand(50, 300)
-			///////i need roxys heolp
+			src.pressure_crystal_peaks.Add(value)
 
 	proc/add_commodity(var/datum/commodity/new_c)
 		src.commodities["[new_c.comtype]"] = new_c
@@ -525,8 +525,7 @@
 			if(minus < 10)
 				value = 0
 		for (var/peak in src.pressure_crystal_peaks)
-			var/peak_value = text2num(peak)
-			var/plus = abs(pc.pressure - peak_value)
+			var/plus = abs(pc.pressure - peak)
 			switch(plus)
 				if(0 to 1)
 					value *= 5
