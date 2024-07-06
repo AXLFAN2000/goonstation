@@ -529,12 +529,13 @@
 		for (var/peak in src.pressure_crystal_peaks)
 			var/peak_value = text2num(peak)
 			var/plus = abs(pc.pressure - peak_value)
-			if (minus < 1)
-				value = * 5
-			else if (minus > 1 && minus < 5)
-				value = * 3
-			else if (minus > 5 && minus < 10)
-				value = * 2
+			switch(plus)
+				if(0 to 1)
+					value *= 5
+				if(1 to 5)
+					value *= 3
+				if(5 to 10)
+					value *= 2
 		value = round(value)
 		if (sell && value > 0)
 			src.pressure_crystal_sales["[pc.pressure]"] = value
