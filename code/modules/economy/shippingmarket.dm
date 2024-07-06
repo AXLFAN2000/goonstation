@@ -1,7 +1,7 @@
 #define SUPPLY_OPEN_TIME (1 SECOND) //Time it takes to open supply door in seconds.
 #define SUPPLY_CLOSE_TIME (15 SECONDS) //Time it takes to close supply door in seconds.
 /// The full explosion-power-to-credits conversion formula. Also used in smallprogs.dm
-#define PRESSURE_CRYSTAL_VALUATION(power) (power <= 310 ? (power ** 1.1 * 100) : (power ** 1.1 * 34))
+#define PRESSURE_CRYSTAL_VALUATION(power) (power >= 310 ? (power ** 1.1 * 100) : (power ** 1.1 * 34))
 /// The number of peak points on the pressure crystal graph offering bonus credits
 #define PRESSURE_CRYSTAL_PEAK_COUNT 3
 
