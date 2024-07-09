@@ -526,13 +526,17 @@
 				value = 0
 		for (var/peak in src.pressure_crystal_peaks)
 			var/plus = abs(pc.pressure - peak)
+			var/bountystatus = 0
 			switch(plus)
 				if(0 to 1)
 					value *= 5
+					bountystatus = 3
 				if(1 to 5)
 					value *= 3
+					bountystatus = 2
 				if(5 to 10)
 					value *= 2
+					bountystatus = 1
 		value = round(value)
 		if (sell && value > 0)
 			src.pressure_crystal_sales["[pc.pressure]"] = value
@@ -540,6 +544,8 @@
 			var/message = "Notification: [value] credits earned from outgoing pressure crystal at [pc.pressure] kiloblast. "
 			pdaSignal.data = list("address_1"="00000000", "command"="text_message", "sender_name"="CARGO-MAILBOT",  "group"=list(MGD_SCIENCE), "sender"="00000000", "message"=message)
 			radio_controller.get_frequency(FREQ_PDA).post_packet_without_source(pdaSignal)
+			if (bountystatus = >0)
+				//send it to uhh back... to the associative list ??
 
 		return value
 

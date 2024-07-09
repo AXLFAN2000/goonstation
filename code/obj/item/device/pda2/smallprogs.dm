@@ -1716,12 +1716,17 @@ Using electronic "Detomatix" SELF-DESTRUCT program is perhaps less simple!<br>
 			<b>Certain pressure values are of particular interest and will reward bonuses:</b>\
 			<br>"
 		for (var/peak in shippingmarket.pressure_crystal_peaks)
-			. += "[peak] kiloblast: \
+			if (bountystatus = 0)
+				. += "[peak] kiloblast: \
 				Maximum estimated value: [round(5 * PRESSURE_CRYSTAL_VALUATION(peak))] credits.<br>"
+			if (bountystatus = >0)
+				//how do I do strikethrough?
+				"[peak] Bounty claimed with an [bountystatus = 3 ideal, bountystatus = 2 decent, bountystatus = 1 acceptable] specimen."
 		. += "<br><b>Pressure crystal values already sold:</b>\
 			<br>"
 		for (var/value in shippingmarket.pressure_crystal_sales)
 			. += "[value] kiloblast for [shippingmarket.pressure_crystal_sales[value]] credits.<br>"
+			//how do I flag it as being part of a claimed bounty?
 
 /datum/computer/file/pda_program/rockbox
 	name = "Rockbox™ Cloud Status"
