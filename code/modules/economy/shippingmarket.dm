@@ -45,6 +45,7 @@
 	var/list/pressure_crystal_sales = list()
 	/// Pressure crystal market peaks, will positively affect future sales (associative list of pressure to multipliers)
 	var/list/pressure_crystal_peaks = list()
+	var/active_crystal_peaks = PRESSURE_CRYSTAL_PEAK_COUNT
 
 	var/points_per_crate = 10
 
@@ -101,13 +102,22 @@
 
 		src.launch_distance = get_dist(spawnpoint, target)
 
-		//set up pressure crystal market peaks
-		for (var/i in 1 to PRESSURE_CRYSTAL_PEAK_COUNT)
-			var/value = rand(50, 300)
-			src.pressure_crystal_peaks.Add(value)
+		src.generate_pressure_crystal_peaks(TRUE)
 
 	proc/add_commodity(var/datum/commodity/new_c)
 		src.commodities["[new_c.comtype]"] = new_c
+
+	/// set up the pressure crystal bounties
+	proc/generate_pressure_crystal_peaks(var/initial_generation = FALSE)
+		src.active_crystal_peaks = PRESSURE_CRYSTAL_PEAK_COUNT
+		for(var/i in 1 to PRESSURE_CRYSTAL_PEAK_COUNT)
+			var/value = rand(50, 300)
+			src.pressure_crystal_peaks["[value]"] = 0
+		if(!initial_generation)
+			var/datum/signal/pdaSignal = get_free_signal()
+			var/message = "Notification: New bounties are available in the crystal bazaar."
+			pdaSignal.data = list("command"="text_message", "sender_name"="CARGO-MAILBOT", "group"=list(MGD_SCIENCE), "sender"="00000000", "message"=message)
+			radio_controller.get_frequency(FREQ_PDA).post_packet_without_source(pdaSignal)
 
 	proc/add_req_contract()
 		if(length(req_contracts) >= max_req_contracts)
@@ -525,28 +535,33 @@
 			if(minus < 10)
 				value = 0
 		for (var/peak in src.pressure_crystal_peaks)
-			var/plus = abs(pc.pressure - peak)
-			var/bountystatus = 0
+			if(src.pressure_crystal_peaks[peak]) continue
+			var/plus = abs(pc.pressure - text2num(peak))
 			switch(plus)
 				if(0 to 1)
 					value *= 5
-					bountystatus = 3
+					if(sell)
+						src.pressure_crystal_peaks["[peak]"] = 3
+						src.active_crystal_peaks--
 				if(1 to 5)
 					value *= 3
-					bountystatus = 2
+					if(sell)
+						src.pressure_crystal_peaks["[peak]"] = 2
+						src.active_crystal_peaks--
 				if(5 to 10)
 					value *= 2
-					bountystatus = 1
+					if(sell)
+						src.pressure_crystal_peaks["[peak]"] = 1
+						src.active_crystal_peaks--
 		value = round(value)
+		if(!src.active_crystal_peaks)
+			src.generate_pressure_crystal_peaks(FALSE)
 		if (sell && value > 0)
 			src.pressure_crystal_sales["[pc.pressure]"] = value
 			var/datum/signal/pdaSignal = get_free_signal() // tell sciv
 			var/message = "Notification: [value] credits earned from outgoing pressure crystal at [pc.pressure] kiloblast. "
 			pdaSignal.data = list("address_1"="00000000", "command"="text_message", "sender_name"="CARGO-MAILBOT",  "group"=list(MGD_SCIENCE), "sender"="00000000", "message"=message)
 			radio_controller.get_frequency(FREQ_PDA).post_packet_without_source(pdaSignal)
-			if (bountystatus = >0)
-				//send it to uhh back... to the associative list ??
-
 		return value
 
 	proc/handle_returns(obj/storage/crate/sold_crate,var/return_code)

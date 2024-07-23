@@ -1716,12 +1716,19 @@ Using electronic "Detomatix" SELF-DESTRUCT program is perhaps less simple!<br>
 			<b>Certain pressure values are of particular interest and will reward bonuses:</b>\
 			<br>"
 		for (var/peak in shippingmarket.pressure_crystal_peaks)
-			if (bountystatus = 0)
+			if(shippingmarket.pressure_crystal_peaks[peak] == 0)
 				. += "[peak] kiloblast: \
-				Maximum estimated value: [round(5 * PRESSURE_CRYSTAL_VALUATION(peak))] credits.<br>"
-			if (bountystatus = >0)
-				//how do I do strikethrough?
-				"[peak] Bounty claimed with an [bountystatus = 3 ideal, bountystatus = 2 decent, bountystatus = 1 acceptable] specimen."
+				Maximum estimated value: [round(5 * PRESSURE_CRYSTAL_VALUATION(text2num(peak)))] credits.<br>"
+			else
+				var/crystal_rating_string = ""
+				switch(shippingmarket.pressure_crystal_peaks[peak])
+					if(3)
+						crystal_rating_string = "ideal"
+					if(2)
+						crystal_rating_string = "decent"
+					if(3)
+						crystal_rating_string = "acceptable"
+				. += "[peak] Bounty claimed with \a [crystal_rating_string] specimen."
 		. += "<br><b>Pressure crystal values already sold:</b>\
 			<br>"
 		for (var/value in shippingmarket.pressure_crystal_sales)
