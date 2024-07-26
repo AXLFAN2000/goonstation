@@ -2603,7 +2603,7 @@ ABSTRACT_TYPE(/obj/item/reagent_containers/food/snacks/soup)
 	icon_state = "zongzi-wrapped"
 	bites_left = 3
 	heal_amt = 2
-	var/unwrapped = 0
+	var/unwrapped = FALSE
 	food_effects = list("food_all", "food_energized_big")
 
 
@@ -2621,9 +2621,10 @@ ABSTRACT_TYPE(/obj/item/reagent_containers/food/snacks/soup)
 	attack_self(mob/user as mob)
 		if (unwrapped)
 			attack(user, user)
+			return
 
-		unwrapped = 1
-		user.visible_message("[user] unwraps the zongzi!", "You unwrap the zongzi.")
+		unwrapped = TRUE
+		user.visible_message("[user] unwraps [src]!", "You unwrap [src].")
 		icon_state = "zongzi"
 		desc = "A glutinous rice snack. The distinctive bamboo leaf wrapper seems to be missing."
 
@@ -2773,6 +2774,19 @@ ABSTRACT_TYPE(/obj/item/reagent_containers/food/snacks/soup)
 	initial_volume = 20
 	initial_reagents = list("THC"=10,"CBD"=10)
 	food_effects = list("food_brute","food_burn")
+
+/obj/item/reagent_containers/food/snacks/cinnamonbun
+	name = "cinnamon bun"
+	desc = "A delicious little pastry roll with a swirl of cinnamon."
+	icon = 'icons/obj/foodNdrink/food_dessert.dmi'
+	icon_state = "cinnamonbun"
+	bites_left = 2
+	heal_amt = 2
+	food_color = "#C58C66"
+	initial_volume = 20
+	initial_reagents = list("sugar"=10, "cinnamon"=10)
+	food_effects = list("food_burn","food_warm")
+	meal_time_flags = MEAL_TIME_SNACK | MEAL_TIME_BREAKFAST
 
 /obj/item/reagent_containers/food/snacks/tandoorichicken
 	name = "tandoori chicken"

@@ -1,7 +1,5 @@
 #define SUPPLY_OPEN_TIME (1 SECOND) //Time it takes to open supply door in seconds.
 #define SUPPLY_CLOSE_TIME (15 SECONDS) //Time it takes to close supply door in seconds.
-/// The full explosion-power-to-credits conversion formula. Also used in smallprogs.dm
-#define PRESSURE_CRYSTAL_VALUATION(power) (power >= 310 ? (power ** 1.1 * 100) : (power ** 1.1 * 34))
 /// The number of peak points on the pressure crystal graph offering bonus credits
 #define PRESSURE_CRYSTAL_PEAK_COUNT 3
 
@@ -101,13 +99,18 @@
 
 		src.launch_distance = get_dist(spawnpoint, target)
 
-		//set up pressure crystal market peaks
-		for (var/i in 1 to PRESSURE_CRYSTAL_PEAK_COUNT)
-			var/value = rand(50, 300)
-			src.pressure_crystal_peaks.Add(value)
+		src.generate_pressure_crystal_peaks(TRUE)
 
 	proc/add_commodity(var/datum/commodity/new_c)
 		src.commodities["[new_c.comtype]"] = new_c
+
+	/// set up the pressure crystal bounties
+	proc/generate_pressure_crystal_peaks()
+		var/active_bounty_count = 0
+		for(var/datum/pressure_crystal_bounty/bounty in src.pressure_crystal_peaks)
+			if(bounty.status == CRYSTAL_BOUNTY_STATUS_INCOMPLETE) active_bounty_count++
+		for(var/i in 1 to PRESSURE_CRYSTAL_PEAK_COUNT - active_bounty_count)
+			src.pressure_crystal_peaks.Add(new /datum/pressure_crystal_bounty(rand(50, 300)))
 
 	proc/add_req_contract()
 		if(length(req_contracts) >= max_req_contracts)
@@ -516,37 +519,35 @@
 	proc/appraise_pressure_crystal(var/obj/item/pressure_crystal/pc, var/sell = 0)
 		if (pc.pressure <= 0 || pc.broken)
 			return
-		//calculate the base value
 		var/value = PRESSURE_CRYSTAL_VALUATION(pc.pressure)
+		/// bounty this pressure crystal fulfills, if any
+		var/datum/pressure_crystal_bounty/hit_bounty = null
 		//for each previously sold pressure crystal
 		for (var/sale in src.pressure_crystal_sales)
 			var/sale_value = text2num(sale)
 			var/minus = abs(pc.pressure - sale_value)
 			if(minus < 10)
 				value = 0
-		for (var/peak in src.pressure_crystal_peaks)
-			var/plus = abs(pc.pressure - peak)
-			var/bountystatus = 0
-			switch(plus)
-				if(0 to 1)
-					value *= 5
-					bountystatus = 3
-				if(1 to 5)
-					value *= 3
-					bountystatus = 2
-				if(5 to 10)
-					value *= 2
-					bountystatus = 1
-		value = round(value)
+		for (var/datum/pressure_crystal_bounty/bounty in src.pressure_crystal_peaks)
+			if(bounty.status != CRYSTAL_BOUNTY_STATUS_INCOMPLETE) continue
+			if(!bounty.meets_bounty(pc.pressure)) continue
+			value = bounty.calculate_payout(pc.pressure, sell)
+			hit_bounty = bounty
+			if(sell)
+				src.generate_pressure_crystal_peaks()
+			break
 		if (sell && value > 0)
-			src.pressure_crystal_sales["[pc.pressure]"] = value
+			value = round(value)
+			if(!hit_bounty)
+				src.pressure_crystal_sales["[pc.pressure]"] = value
 			var/datum/signal/pdaSignal = get_free_signal() // tell sciv
-			var/message = "Notification: [value] credits earned from outgoing pressure crystal at [pc.pressure] kiloblast. "
-			pdaSignal.data = list("address_1"="00000000", "command"="text_message", "sender_name"="CARGO-MAILBOT",  "group"=list(MGD_SCIENCE), "sender"="00000000", "message"=message)
+			var/message = ""
+			if(hit_bounty)
+				message = "Notification: [hit_bounty.target_pressure] kiloblast bounty claimed with \a [hit_bounty.status] specimen ([pc.pressure] kiloblast). [value] credits earned."
+			else
+				message = "Notification: [value] credits earned from outgoing pressure crystal at [pc.pressure] kiloblast."
+			pdaSignal.data = list("command"="text_message", "sender_name"="CARGO-MAILBOT", "group"=list(MGD_SCIENCE), "sender"="00000000", "message"=message)
 			radio_controller.get_frequency(FREQ_PDA).post_packet_without_source(pdaSignal)
-			if (bountystatus = >0)
-				//send it to uhh back... to the associative list ??
-
 		return value
 
 	proc/handle_returns(obj/storage/crate/sold_crate,var/return_code)
