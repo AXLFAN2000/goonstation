@@ -1720,25 +1720,19 @@ Using electronic "Detomatix" SELF-DESTRUCT program is perhaps less simple!<br>
 			<br><br>\
 			<b>Certain pressure values are of particular interest and will reward bonuses:</b>\
 			<br>"
-		for (var/peak in shippingmarket.pressure_crystal_peaks)
-			if(shippingmarket.pressure_crystal_peaks[peak] == 0)
-				. += "[peak] kiloblast: \
-				Maximum estimated value: [round(5 * PRESSURE_CRYSTAL_VALUATION(text2num(peak)))] credits.<br>"
+		var/list/hit_bounties = list()
+		for (var/datum/pressure_crystal_bounty/bounty in shippingmarket.pressure_crystal_peaks)
+			if(bounty.status == CRYSTAL_BOUNTY_STATUS_INCOMPLETE)
+				. += "[bounty.target_pressure] kiloblast: \
+				Maximum estimated value: [round(5 * PRESSURE_CRYSTAL_VALUATION(bounty.target_pressure))] credits.<br>"
 			else
-				var/crystal_rating_string = ""
-				switch(shippingmarket.pressure_crystal_peaks[peak])
-					if(3)
-						crystal_rating_string = "ideal"
-					if(2)
-						crystal_rating_string = "decent"
-					if(3)
-						crystal_rating_string = "acceptable"
-				. += "[peak] Bounty claimed with \a [crystal_rating_string] specimen."
+				hit_bounties.Add(bounty)
 		. += "<br><b>Pressure crystal values already sold:</b>\
 			<br>"
+		for(var/datum/pressure_crystal_bounty/bounty in hit_bounties)
+			. += "[bounty.target_pressure] kiloblast bounty worth [bounty.sold_value] credits claimed with \a [bounty.status] specimen.<br>"
 		for (var/value in shippingmarket.pressure_crystal_sales)
 			. += "[value] kiloblast for [shippingmarket.pressure_crystal_sales[value]] credits.<br>"
-			//how do I flag it as being part of a claimed bounty?
 
 /datum/computer/file/pda_program/rockbox
 	name = "Rockbox™ Cloud Status"
