@@ -38,10 +38,9 @@
 	var/list/supply_requests = list() // Pending requests, of type /datum/supply_order
 	var/list/supply_history = list() // History of all approved requests, of type string
 
-	// Both of these are string indexed because byond will whine and complain and explode otherwise
-	/// Previously sold pressure crystal values, will negatively affect future sales (associative list of pressure to credit value)
+	/// Previously sold pressure crystal values, will prevent future sales within 10 kiloblast in either direction (associative list of pressure to credit value)
 	var/list/pressure_crystal_sales = list()
-	/// Pressure crystal market peaks, will positively affect future sales (associative list of pressure to multipliers)
+	/// Active and completed pressure crystal bounties (list of /datum/pressure_crystal_bounty instances)
 	var/list/pressure_crystal_peaks = list()
 
 	var/points_per_crate = 10
